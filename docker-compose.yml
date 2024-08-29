@@ -1,0 +1,47 @@
+services:
+  multi-app-manager-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        uid: ${UID}
+    image: multi-app-manager-app:latest
+    container_name: multi-app-manager-app-container
+    volumes:
+      - ./:/var/www/html:delegated
+      - ./docker-configs/php.ini:/usr/local/etc/php/php.ini:ro
+    ports:
+      - 8001:80
+      - 5173:5173 #Vite Port
+    depends_on:
+      - multi-app-manager-mariadb
+
+  multi-app-manager-mariadb:
+    image: mariadb:11.2.2
+    container_name: multi-app-manager-mariadb
+    command:
+      [
+        '--default-time-zone=+00:00',
+        '--default-authentication-plugin=mysql_native_password'
+      ]
+    ports:
+      - 3307:3306
+    environment:
+      - MARIADB_ROOT_PASSWORD=root
+    volumes:
+      - multi-app-manager-mariadb-data:/var/lib/mysql
+
+  multi-app-manager-phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: multi-app-manager-phpmyadmin
+    environment:
+      - PMA_HOST=multi-app-manager-mariadb
+      - PMA_USER=root
+      - PMA_PASSWORD=root
+      - UPLOAD_LIMIT=120M
+    ports:
+      - "8002:80"
+    depends_on:
+      - multi-app-manager-mariadb
+volumes:
+  multi-app-manager-mariadb-data:
