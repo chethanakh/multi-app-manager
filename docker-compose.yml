@@ -30,6 +30,7 @@ services:
       - MARIADB_ROOT_PASSWORD=root
     volumes:
       - multi-app-manager-mariadb-data:/var/lib/mysql
+      - ./docker-configs/init.sql:/data/application/init.sql
 
   multi-app-manager-phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
@@ -43,5 +44,25 @@ services:
       - "8002:80"
     depends_on:
       - multi-app-manager-mariadb
+  multi-app-manager-nginx-proxy-manager:
+    image: 'jc21/nginx-proxy-manager:latest'
+    restart: unless-stopped
+    ports:
+      - '80:80' # Public HTTP Port
+      - '443:443' # Public HTTPS Port
+      - '8003:81' # Admin Web Port
+    environment:
+      DB_MYSQL_HOST: multi-app-manager-mariadb
+      DB_MYSQL_PORT: 3306
+      DB_MYSQL_USER: root
+      DB_MYSQL_PASSWORD: root
+      DB_MYSQL_NAME: nginx-proxy-manager-master-db
+    volumes:
+      - multi-app-manager-nginx-proxy-manager-data:/data
+      - multi-app-manager-nginx-proxy-manager-letsencrypt:/etc/letsencrypt
+    depends_on:
+      - multi-app-manager-mariadb
 volumes:
   multi-app-manager-mariadb-data:
+  multi-app-manager-nginx-proxy-manager-data:
+  multi-app-manager-nginx-proxy-manager-letsencrypt:
